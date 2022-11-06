@@ -36,7 +36,11 @@ class LogisticRegression():
 				cost.append(self.cost_function(h, theta, y_one_vs_all))
 			self.theta.append((theta, i))
 			self.cost.append((cost, i))
+		np.save("values.npy", self.theta)
 		return self
+
+	def load_values(self, file):
+		self.theta = np.load(file)
 
 	def predict(self, x):
 		x = np.insert(x, 0, 1, axis=1)
