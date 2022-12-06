@@ -20,11 +20,11 @@ def load_csv(filename):
         for line in read_csv:
             datas.append(line[1])
     # Clean the header cell
-    datas.remove("Hogwarts House")
+    # datas.remove("Hogwarts House")
     return datas
 
 if __name__ == '__main__':
-    file = "datasets/dataset_train.csv" #"dataset_truth.csv"
+    file = "dataset_truth.csv" #"dataset_truth.csv"
     if os.path.isfile(file):
         truths = load_csv(file)
     else:
