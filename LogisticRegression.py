@@ -2,59 +2,46 @@ import numpy as np
 
 
 class LogisticRegression():
-
-	def __init__(self, lrate = 0.01, epochs=1000):
+	"""Params:
+	lrate: float, Learning rate between 0 and 1, default 0.1
+	epochs: int, amount of iterations over dataset, default 50
+	"""
+	def __init__(self, lrate=0.1, epochs=50, initial_weight=None, multi_class=None):
 		self.lrate = lrate
 		self.epochs = epochs
+		self._w = initial_weight
+		self._classes = multi_class
+		self._errors = []
+		self._cost = []
 
-	def sigmoid(self, x):
-		return 1 / (1 + np.exp(-x))
+	def sigmoid(self, X):
+		return 1 / (1 + np.exp(-(self._w.dot(X.T))))
 
-	def cost_function(self, h, theta, y):
-		m = len(y)
-		cost = (1 / m) * (np.sum(-y.T.dot(np.log(h)) - (1 - y).T.dot(np.log(1 - h))))
-		return cost
+	def fit(self, X, y):
+		self._classes = np.unique(y).tolist()
+		newX = np.insert(X, 0, 1, axis=1)
+		m = newX.shape[0]
 
-	def gradient_descent(self, x, h, theta, y, m):
-		gradient_value = np.dot(x.T, (h - y)) / m
-		theta -= self.lrate * gradient_value
-		return theta
+		self._w = np.zeros(newX.shape[1] * len(self._classes))
+		self._w = self._w.reshape(len(self._classes), newX.shape[1])
 
-	def fit(self, x, y):
-		self.theta = []
-		self.cost = []
-		x = np.insert(x, 0, 1, axis=1)
-		m = len(y)
-		for i in np.unique(y):
-			y_one_vs_all = np.where(y == i, 0, 1)
-			theta = np.zeros(x.shape[1])
-			cost = []
-			for _ in range(self.epochs):
-				z = x.dot(theta)
-				h = self.sigmoid(z)
-				theta = self.gradient_descent(x, h, theta, y_one_vs_all, m)
-				cost.append(self.cost_function(h, theta, y_one_vs_all))
-			self.theta.append((theta, i))
-			self.cost.append((cost, i))
-		np.save("values.npy", self.theta)
+		y_vec = np.zeros((len(y), len(self._classes)))
+		for i in range(len(y)):
+			y_vec[i, self._classes.index(y[i])] = 1
+
+		for _ in range(self.epochs):
+			predictions = self.sigmoid(newX).T
+
+			lhs = y_vec.T.dot(np.log(predictions))
+			rhs = (1 - y_vec).T.dot(np.log(1 - predictions))
+
+			cost = (-1 / m) * sum(lhs + rhs)
+			self._cost.append(cost)
+			self._errors.append(sum(y != self.predict(X)))
+			self._w = self._w - (self.lrate * (1 / m) * (predictions - y_vec).T.dot(newX))
 		return self
 
-	def load_values(self, file):
-		self.theta = np.load(file)
-
-	def predict(self, x):
-		x = np.insert(x, 0, 1, axis=1)
-		x_predicted = [max((self.sigmoid(i.dot(theta)), c) for theta, c in self.theta)[1] for i in x]
-
-	def score(self, x, y):
-		''' Tests accuracy '''
-		score = sum(self.predict(x) == y) / len(y)
-		return score
-
-	def plot_cost(self, costh):
-		for cost, c in costh:
-			plt.plot(range(len(cost)),cost,'r')
-			plt.title("Convergence Graph of Cost Function of class " + str(c) +" vs All")
-			plt.xlabel("Number of Iterations")
-			plt.ylabel("Cost")
-			plt.show()
+	def predict(self, X):
+		X = np.insert(X, 0, 1, axis=1)
+		predictions = self.sigmoid(X).T
+		return [self._classes[x] for x in predictions.argmax(1)]

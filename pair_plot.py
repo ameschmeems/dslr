@@ -23,7 +23,7 @@ def main():
 		for column2 in features:
 			for i in range(len(houses)):
 				if (column1 != column2):
-					axes[j, k].scatter(houses[i][column1], houses[i][column2], color=colors[i], alpha=0.4)
+					axes[j, k].scatter(y=houses[i][column1], x=houses[i][column2], color=colors[i], alpha=0.4)
 				else:
 					axes[j, k].hist(houses[i][column1].dropna(), color=colors[i], alpha=0.4)
 				if (k == 0):
@@ -34,11 +34,11 @@ def main():
 				axes[j,k].set_yticks([])
 			k += 1
 		j += 1
-	
+
 	fig.tight_layout()
-	
+
 	plt.show()
-	
+
 
 if __name__ == "__main__":
 	main()
